@@ -1,7 +1,7 @@
 <!DOCTYPE>
 <html lang="utf8">
 <head>
-  <title>Jelly</title>
+  <title>Jelly JS Visualizer</title>
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.23.0/dist/cytoscape.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/layout-base@2.0.1/layout-base.min.js"></script>
@@ -13,9 +13,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-panzoom@2.5.3/cytoscape-panzoom.min.js"></script>
+  <!--<script src="https://ivis-at-bilkent.github.io/cytoscape.js-avsdf/cytoscape-avsdf.js"></script>
   <script src="https://unpkg.com/layout-base/layout-base.js"></script>
-  <script src="https://unpkg.com/cose-base/cose-base.js"></script>
-  <script src="https://cytoscape.org/cytoscape.js-euler/cytoscape-euler.js"></script>
+  <script src="https://unpkg.com/avsdf-base/avsdf-base.js"></script>-->
   <style>
     body {
       font-family: sans-serif;
@@ -416,7 +416,8 @@
               }
             }
           }
-        ]
+        ],
+        boxSelectionEnabled: true,
       });
 
       cy.nodes().addClass("highlight");
