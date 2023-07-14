@@ -3,6 +3,24 @@
 [![MIT License](https://img.shields.io/github/license/cs-au-dk/jelly)](LICENSE)
 [![npm version](https://img.shields.io/npm/v/@cs-au-dk/jelly)](https://www.npmjs.com/package/@cs-au-dk/jelly)
 
+### How to Use
+
+For Dependencies
+```bash
+npm install 
+```
+
+For Typescript compilation
+```bash
+npm run build 
+```
+
+For Use
+```bash
+node lib/main.js
+```
+
+
 #### Copyright © 2023 Anders Møller
 
 Jelly is a static analyzer for performing
