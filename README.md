@@ -1,7 +1,6 @@
 # Jelly
 
 [![MIT License](https://img.shields.io/github/license/cs-au-dk/jelly)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/@cs-au-dk/jelly)](https://www.npmjs.com/package/@cs-au-dk/jelly)
 
 ### How to Use
 
@@ -50,9 +49,7 @@ Proc. ACM Program. Lang. 4(OOPSLA): 187:1-187:25 (2020)
 
 ## Installing
 
-```bash
-npm install -g @cs-au-dk/jelly
-```
+Download Git
 
 Other options are described below at [How to build](#how-to-build).
 
@@ -62,6 +59,7 @@ See the full usage:
 ```bash
 jelly --help
 ```
+this works only if jelly has been registered as an alias for node lib/main.js
 
 When running the Jelly static analyzer, one or more entry files are given as input.
 Directories are expanded (using heuristics to skip certain files and directories, see [files.ts](src/misc/files.ts)).
