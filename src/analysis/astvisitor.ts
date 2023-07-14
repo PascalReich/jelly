@@ -66,7 +66,7 @@ import {
     OptionalMemberExpression,
     RegExpLiteral,
     ReturnStatement,
-    SequenceExpression,
+    SequenceExpression, //SourceLocation,
     StaticBlock,
     Super,
     TaggedTemplateExpression,
@@ -88,7 +88,7 @@ import {
 } from "./tokens";
 import {ModuleInfo} from "./infos";
 import logger from "../misc/logger";
-import {mapArrayAdd, locationToStringWithFile} from "../misc/util";
+import {mapArrayAdd, locationToStringWithFile, Location} from "../misc/util";
 import assert from "assert";
 import {options} from "../options";
 import {ComponentAccessPath, PropertyAccessPath, UnknownAccessPath} from "./accesspaths";
@@ -110,6 +110,7 @@ import {
 import {Operations} from "./operations";
 import {TokenListener} from "./listeners";
 import {JELLY_NODE_ID} from "../parsing/extras";
+import {codeFromLocation} from "../misc/files";
 
 export const IDENTIFIER_KIND = Symbol();
 
@@ -217,10 +218,23 @@ export function visit(ast: File, op: Operations) {
                 (isObjectMethod(path.node) || isClassMethod(path.node)) ? getKey(path.node) :
                     cls ? cls.id?.name : undefined;// for constructors, use the class name if present
             const anon = isFunctionDeclaration(path.node) || isFunctionExpression(path.node) ? path.node.id === null : isArrowFunctionExpression(path.node);
-            const msg = cls ? "constructor" : `${name ?? (anon ? "<anonymous>" : "<computed>")}`;
+            let anonMsg;
+            //let start: {line: number, column:number} | undefined;
+            //if (startline !== 0) start = ;
+            if (fun.loc !== null && fun.loc !== undefined) {
+                const startline = fun.loc.start.line
+                let huhLoc: Location | null | undefined = path.node.loc;
+                let altLoc: Location = {start: {line: startline, column: 0}, end: fun.loc.end, module: huhLoc?.module}
+                //logger.verbose([name, anon, path.node, codeFromLocation(path.node.loc), codeFromLocation(altLoc)].join())
+                anonMsg = codeFromLocation(altLoc);
+                anonMsg = anonMsg.replaceAll("return ", "").replaceAll("const ", "").replaceAll("await ", "")
+            }
+
+
+            const msg = cls ? "constructor" : `${name ?? (anon ? `<anon> (${anonMsg})` : "<computed>")}`;
             if (logger.isVerboseEnabled())
                 logger.verbose(`Reached function ${msg} at ${locationToStringWithFile(fun.loc)}`);
-            a.registerFunctionInfo(op.file, path, name, fun);
+            a.registerFunctionInfo(op.file, path, name ?? anonMsg, fun);
             if (!name && !anon)
                 f.warnUnsupported(fun, `Computed ${isFunctionDeclaration(path.node) || isFunctionExpression(path.node) ? "function" : "method"} name`); // TODO: handle functions/methods with unknown name?
 

@@ -142,7 +142,8 @@ export async function analyzeFiles(files: Array<string>, solver: Solver) {
                     await solver.propagate();
                     await patchDynamics(solver);
 
-                } else {
+                } else
+                {
 
                     // compute strongly connected components from the package dependency graph
                     if (logger.isVerboseEnabled())
