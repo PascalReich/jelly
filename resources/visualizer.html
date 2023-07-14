@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.3/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-panzoom@2.5.3/cytoscape-panzoom.min.js"></script>
+  <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+  <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+  <script src="https://cytoscape.org/cytoscape.js-euler/cytoscape-euler.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -104,6 +107,34 @@
     }
   </style>
   <script>
+
+    function getWithNeighbors(eles) {
+      return eles.add(eles.descendants()).neighbourhood();
+    }
+
+    function highlightRed(elem) {
+
+      if (elem.is('node[kind="module"]') || elem.is('node[kind="package"]')) return;
+
+      var eles = getWithNeighbors(elem);
+      var fareles = cy.collection();
+      eles.forEach((node) => {
+        fareles = fareles.union(getWithNeighbors(node))
+      })
+      fareles = fareles.not(eles)
+      var edges = elem.components()?.at(0)?.connectedEdges() ?? elem.components()?.at(0)?.connectedNodes()
+
+      cy.startBatch();
+      cy.elements().removeClass("redHighlight");
+      cy.elements().removeClass("orangeHighlight");
+
+      fareles.addClass("orangeHighlight")
+      eles.addClass("redHighlight");
+      if (edges) edges.addClass("redHighlight");
+
+      cy.endBatch();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       cytoscape.warnings(false);
       const cy = window.cy = cytoscape({
@@ -187,7 +218,7 @@
             selector: 'node[kind="package"]',
             style: {
               'label': 'data(name)',
-              'font-size': '10px',
+              'font-size': '16px',
               'shape': 'rectangle'
             }
           },
@@ -217,7 +248,7 @@
             selector: 'node[kind="module"]',
             style: {
               'label': 'data(name)',
-              'font-size': '8px',
+              'font-size': '14px',
               'shape': 'rectangle'
             }
           },
@@ -248,7 +279,7 @@
             selector: 'node[kind="function"]',
             style: {
               'label': 'data(name)',
-              'font-size': '6px',
+              'font-size': '12px',
               'shape': 'ellipse'
             }
           },
@@ -338,6 +369,38 @@
             }
           },
           {
+            selector: '.redHighlight',
+            css: {
+              'border-width': '4px',
+              'border-color': "red"
+            }
+          },
+          {
+            selector: '.orangeHighlight',
+            css: {
+              'border-width': '2px',
+              'border-color': "ornage"
+            }
+          },
+          {
+            selector: 'node[kind="function"].redHighlight',
+            css: {
+              'font-weight': 'bold',
+            }
+          },
+          {
+            selector: 'edge.redHighlight',
+            css: {
+              'line-color': 'red'
+            }
+          },
+          {
+            selector: 'edge.orangeHighlight',
+            css: {
+              'line-color': 'orange'
+            }
+          },
+          {
             selector: 'edge[sourceTarget]',
             style: {
               'line-color': '#aa0000',
@@ -355,6 +418,11 @@
           }
         ]
       });
+
+      cy.nodes().addClass("highlight");
+      cy.nodes().addClass("callWeight");
+
+
       cy.panzoom({
         panSpeed: 5,
         panDistance: 15
@@ -368,6 +436,8 @@
       });
       cy.on('select', e => {
         document.getElementById("msg").textContent = e.target?.data()?.fullName ?? '';
+        this.highlightRed(cy.$(":selected"));
+
       });
       cy.on('unselect', () => {
         document.getElementById("msg").textContent = '';
@@ -379,16 +449,174 @@
           layout.stop();
       }
       function newLayout(fit = false) {
-        layout = cy.layout({
+        /*let options = {
+          name: 'fcose',
+
+          // Called on `layoutready`
+          ready: function(){},
+
+          // Called on `layoutstop`
+          stop: function(){},
+
+          // Whether to animate while running the layout
+          // true : Animate continuously as the layout is running
+          // false : Just show the end result
+          // 'end' : Animate with the end result, from the initial positions to the end positions
+          animate: true,
+
+          // Easing of the animation for animate:'end'
+          animationEasing: undefined,
+
+          // The duration of the animation for animate:'end'
+          animationDuration: undefined,
+
+          // A function that determines whether the node should be animated
+          // All nodes animated by default on animate enabled
+          // Non-animated nodes are positioned immediately when the layout starts
+          animateFilter: function ( node, i ){ return true; },
+
+
+          // The layout animates only after this many milliseconds for animate:true
+          // (prevents flashing on fast runs)
+          animationThreshold: 250,
+
+          // Number of iterations between consecutive screen positions update
+          refresh: 20,
+
+          // Whether to fit the network view after when done
+          fit: true,
+
+          // Padding on fit
+          padding: 30,
+
+          // Constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
+          boundingBox: undefined,
+
+          // Excludes the label when calculating node bounding boxes for the layout algorithm
+          nodeDimensionsIncludeLabels: false,
+
+          // Randomize the initial positions of the nodes (true) or use existing positions (false)
+          randomize: false,
+
+          // Extra spacing between components in non-compound graphs
+          componentSpacing: 40,
+
+          // Node repulsion (non overlapping) multiplier
+          nodeRepulsion: function( node ){ return 2048; },
+
+          // Node repulsion (overlapping) multiplier
+          nodeOverlap: 4,
+
+          // Ideal edge (non nested) length
+          idealEdgeLength: function( edge ){ return 32; },
+
+          // Divisor to compute edge forces
+          edgeElasticity: function( edge ){ return 32; },
+
+          // Nesting factor (multiplier) to compute ideal edge length for nested edges
+          nestingFactor: 1.2,
+
+          // Gravity force (constant)
+          gravity: 1,
+
+          // Maximum number of iterations to perform
+          numIter: 1000,
+
+          // Initial temperature (maximum node displacement)
+          initialTemp: 1000,
+
+          // Cooling factor (how the temperature is reduced between consecutive iterations
+          coolingFactor: 0.99,
+
+          // Lower temperature threshold (below this point the layout will end)
+          minTemp: 1.0
+        };
+
+        layout = cy.layout( options );*/
+
+        var nodeMap = {}
+
+        cy.nodes().forEach((node) => {
+          if (node.data().kind === "package" || node.data().kind === "module") return;
+          if (!(node.data().parent in nodeMap)) {
+            nodeMap[node.data().parent] = cy.collection();
+          }
+          nodeMap[node.data().parent] = nodeMap[node.data().parent].union(node);
+        })
+
+        var bareNodes = cy.nodes().filter(function( ele ){
+          return ele.isNode() && (ele.connectedEdges(":visible").size() === 0) // || ele.indegree(false) < 1);
+        });
+
+        bareNodes = bareNodes.not('node[kind="package"]').not('node[kind="module"]')
+
+        bareNodes.remove()
+
+        const allOtherNodes = bareNodes.complement()
+
+        repeat = false;
+
+        function topLeftGridLayout() {
+          bareNodes.unlock()
+
+          /*
+          bareNodes.restore();
+
+          var i = 0
+
+          bareNodes.forEach((node) => {
+            node.relativePosition({
+              x: 50*(++i),
+              y: 50
+            });
+          })*/
+
+          // TODO FIX
+
+          for (var parent in nodeMap) {
+
+            var viewport = allOtherNodes.intersection(nodeMap[parent]).boundingBox();
+            const fraction = 10;
+            const boundingbox = {
+              x1: viewport['x1'],
+              y1: viewport['y1'],
+              w: viewport["w"] / fraction,
+              h: viewport["h"] / fraction
+            };
+
+            const bareNodesGrid = nodeMap[parent].intersection(bareNodes).layout({
+              name: 'grid',
+              animate: 'false',
+              condense: true,
+              boundingBox: boundingbox,
+              fit: false,
+              nodeDimensionsIncludeLabels: true,
+              stop: nodeMap[parent].intersection(bareNodes).lock
+              //avoidOverlapPadding: 30
+            });
+
+            nodeMap[parent].intersection(bareNodes).restore();
+
+            bareNodesGrid.run()
+          }
+        }
+
+        layout = cy.layout({ //allOtherNodes.layout({
           name: 'cola',
-          padding: 20,
+          padding: 200,
+          refresh: 50,
           animate: true,
           randomize: false,
-          fit,
-          centerGraph: false,
+          fit: true,
+          //centerGraph: false,
           avoidOverlap: true,
-          maxSimulationTime: 3000
+          maxSimulationTime: 5000,
+          ungrabifyWhileSimulating: true,
+          nodeSpacing: function( node ){ return 20; },
+          centerGraph: true,
+          stop: topLeftGridLayout
         });
+
         layout.start();
       }
 
@@ -430,6 +658,7 @@
         allowNestedEdgeCollapse: false,
         groupEdgesOfSameTypeOnCollapse: true
       });
+
       cy.on("expandcollapse.afterexpand", node => {
         cy.batch(() => {
           const desc = cy.nodes(node.target).descendants();
@@ -681,9 +910,9 @@
 <br/>
 <div class="group">
 <span class="callgraphMode">
-<input type="checkbox" id="showCallDensity"><label for="showCallDensity"> Show call density</label>
+<input type="checkbox" id="showCallDensity" checked><label for="showCallDensity"> Show call density</label>
 <br/>
-<input type="checkbox" id="highlightReachable"><label for="highlightReachable"> Highlight reachable</label>
+<input type="checkbox" id="highlightReachable" checked><label for="highlightReachable"> Highlight reachable</label>
 <br/>
 <input type="checkbox" id="hideUnreachable"><label for="hideUnreachable"> Hide unreachable</label>
 </span>
